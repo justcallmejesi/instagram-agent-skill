@@ -1,6 +1,6 @@
 {
-  "version": "1.0",
-  "note": "Lexicon used by humanize.py and detect.py. Replacements are plain-English and keep the sentence grammatical. The last block of each list is Instagram-specific: caption and voiceover slop that does not show up on other platforms. Edit freely - it is meant to be yours.",
+  "version": "1.1",
+  "note": "Lexicon used by humanize.py and detect.py. Replacements are plain-English and keep the sentence grammatical. The last English block of each list is Instagram-specific: caption and voiceover slop that does not show up on other platforms. After it comes a Russian block, fixed phrases only, because a replacement has to stay grammatical in every case form; inflected tells such as \"является\" and \"уникальный\" are flagged as structures instead. Edit freely - it is meant to be yours.",
   "invisible": [
     {
       "cp": "U+200B",
@@ -922,6 +922,271 @@
       "find": "go viral overnight",
       "replace": "get reach",
       "family": "nouns"
+    },
+    {
+      "find": "в современном быстро меняющемся мире",
+      "replace": "сейчас",
+      "family": "openers"
+    },
+    {
+      "find": "в современном мире",
+      "replace": "сейчас",
+      "family": "openers"
+    },
+    {
+      "find": "в наше время",
+      "replace": "сейчас",
+      "family": "openers"
+    },
+    {
+      "find": "в эпоху цифровых технологий",
+      "replace": "сейчас",
+      "family": "openers"
+    },
+    {
+      "find": "на сегодняшний день",
+      "replace": "сейчас",
+      "family": "openers"
+    },
+    {
+      "find": "в настоящее время",
+      "replace": "сейчас",
+      "family": "openers"
+    },
+    {
+      "find": "давайте разберёмся",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "давайте разберемся",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "не секрет, что",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "стоп, не листай",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "не листай дальше",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "в этом видео я расскажу",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "в сегодняшнем видео",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "досмотри до конца",
+      "replace": "",
+      "family": "openers"
+    },
+    {
+      "find": "никто не говорит об этом",
+      "replace": "мало кто об этом говорит",
+      "family": "openers"
+    },
+    {
+      "find": "это изменило всё",
+      "replace": "это сработало",
+      "family": "openers"
+    },
+    {
+      "find": "это изменило все",
+      "replace": "это сработало",
+      "family": "openers"
+    },
+    {
+      "find": "важно отметить, что",
+      "replace": "",
+      "family": "connectives"
+    },
+    {
+      "find": "стоит отметить, что",
+      "replace": "",
+      "family": "connectives"
+    },
+    {
+      "find": "следует отметить, что",
+      "replace": "",
+      "family": "connectives"
+    },
+    {
+      "find": "необходимо отметить, что",
+      "replace": "",
+      "family": "connectives"
+    },
+    {
+      "find": "стоит подчеркнуть, что",
+      "replace": "",
+      "family": "connectives"
+    },
+    {
+      "find": "более того",
+      "replace": "плюс",
+      "family": "connectives"
+    },
+    {
+      "find": "кроме того",
+      "replace": "плюс",
+      "family": "connectives"
+    },
+    {
+      "find": "помимо этого",
+      "replace": "плюс",
+      "family": "connectives"
+    },
+    {
+      "find": "таким образом",
+      "replace": "так что",
+      "family": "connectives"
+    },
+    {
+      "find": "в связи с этим",
+      "replace": "поэтому",
+      "family": "connectives"
+    },
+    {
+      "find": "для того, чтобы",
+      "replace": "чтобы",
+      "family": "connectives"
+    },
+    {
+      "find": "для того чтобы",
+      "replace": "чтобы",
+      "family": "connectives"
+    },
+    {
+      "find": "в конечном итоге",
+      "replace": "в итоге",
+      "family": "connectives"
+    },
+    {
+      "find": "в конце концов",
+      "replace": "в итоге",
+      "family": "connectives"
+    },
+    {
+      "find": "подводя итоги",
+      "replace": "итого",
+      "family": "connectives"
+    },
+    {
+      "find": "подводя итог",
+      "replace": "итого",
+      "family": "connectives"
+    },
+    {
+      "find": "в заключение",
+      "replace": "итак",
+      "family": "connectives"
+    },
+    {
+      "find": "давайте погрузимся в",
+      "replace": "разберём",
+      "family": "verbs"
+    },
+    {
+      "find": "погрузимся в",
+      "replace": "разберём",
+      "family": "verbs"
+    },
+    {
+      "find": "погрузиться в",
+      "replace": "изучить",
+      "family": "verbs"
+    },
+    {
+      "find": "погрузитесь в",
+      "replace": "изучите",
+      "family": "verbs"
+    },
+    {
+      "find": "раскрыть свой потенциал",
+      "replace": "вырасти",
+      "family": "verbs"
+    },
+    {
+      "find": "неотъемлемая часть",
+      "replace": "часть",
+      "family": "nouns"
+    },
+    {
+      "find": "неотъемлемой частью",
+      "replace": "частью",
+      "family": "nouns"
+    },
+    {
+      "find": "широкий спектр",
+      "replace": "много",
+      "family": "nouns"
+    },
+    {
+      "find": "сохрани себе, чтобы не потерять",
+      "replace": "",
+      "family": "closers"
+    },
+    {
+      "find": "сохрани, чтобы не потерять",
+      "replace": "",
+      "family": "closers"
+    },
+    {
+      "find": "сохраняй, чтобы не потерять",
+      "replace": "",
+      "family": "closers"
+    },
+    {
+      "find": "подпишись, чтобы не пропустить",
+      "replace": "",
+      "family": "closers"
+    },
+    {
+      "find": "подписывайся, чтобы не пропустить",
+      "replace": "",
+      "family": "closers"
+    },
+    {
+      "find": "отметь того, кому это нужно",
+      "replace": "",
+      "family": "closers"
+    },
+    {
+      "find": "отправь тому, кому это нужно",
+      "replace": "",
+      "family": "closers"
+    },
+    {
+      "find": "перечитай ещё раз",
+      "replace": "",
+      "family": "closers"
+    },
+    {
+      "find": "перечитай еще раз",
+      "replace": "",
+      "family": "closers"
+    },
+    {
+      "find": "а что думаете вы?",
+      "replace": "",
+      "family": "closers"
+    },
+    {
+      "find": "а что думаешь ты?",
+      "replace": "",
+      "family": "closers"
     }
   ],
   "structures": [
@@ -1020,6 +1285,54 @@
       "regex": "(?i)\\b(?:follow for more|tag someone who|double tap if|share this if|comment below if)\\b",
       "name": "Reflex follow or tag bait",
       "fix": "Ask for the one action this post actually earns. The generic ask trains the audience to ignore every ask."
+    },
+    {
+      "id": "ru-not-just",
+      "regex": "(?i)\\b(?:это )?не просто\\b[^.!?\\n]{2,60}?(?:,|\\s-|\\s—)\\s*(?:а|это)\\b",
+      "name": "\"Не просто X, а Y\"",
+      "fix": "Say the one thing you actually mean. Delete the setup half."
+    },
+    {
+      "id": "ru-not-only",
+      "regex": "(?i)\\bне только\\b[^.!?\\n]{2,80}\\bно и\\b",
+      "name": "\"Не только X, но и Y\"",
+      "fix": "Split into two sentences, or drop the weaker half."
+    },
+    {
+      "id": "ru-kantselyarit",
+      "regex": "(?i)\\b(?:являет(?:ся|есь)|являются|являлся|являлась|являлись|осуществля\\w*|игра(?:ет|ют) (?:ключевую|важную|огромную) роль)\\b",
+      "name": "Bureaucratic Russian (\"является\", \"осуществляет\", \"играет ключевую роль\")",
+      "fix": "Use the plain verb: \"это\", \"делает\", \"важен\". Nobody talks like a report."
+    },
+    {
+      "id": "ru-buzz-adjectives",
+      "regex": "(?i)\\b(?:уникальн|инновационн|революционн|незаменим)\\w*",
+      "name": "Buzz adjective (\"уникальный\", \"инновационный\")",
+      "fix": "Say what exactly is different, with a number."
+    },
+    {
+      "id": "ru-stop-scroll",
+      "regex": "(?im)^\\s*(?:стоп[,.!]?\\s*)?не (?:листай|пролистывай)",
+      "name": "\"Стоп, не листай\"",
+      "fix": "Open on the payoff. Asking for attention proves you have not earned it."
+    },
+    {
+      "id": "ru-in-this-video",
+      "regex": "(?i)\\b(?:в (?:этом|сегодняшнем) (?:видео|ролике|рилсе|посте)|сегодня (?:я )?(?:расскажу|покажу))\\b",
+      "name": "Video preamble (\"в этом видео\", \"сегодня расскажу\")",
+      "fix": "Delete it and open on the payoff."
+    },
+    {
+      "id": "ru-follow-bait",
+      "regex": "(?i)\\b(?:подпишись|подписывайся|подписывайтесь),? чтобы не пропустить\\b|\\bотметь (?:того|друга|подругу),? (?:кто|кому)\\b|\\bставь (?:лайк|сердечко),? если\\b",
+      "name": "Reflex follow or tag bait (\"подпишись, чтобы не пропустить\")",
+      "fix": "Ask for the one action this post actually earns."
+    },
+    {
+      "id": "ru-engagement-bait",
+      "regex": "(?im)(?:\\bсогласн[ыа]?\\?|\\bа вы как думаете\\?|\\bкто со мной\\?)\\s*$",
+      "name": "Engagement bait (\"Согласны?\")",
+      "fix": "Ask something only a reader of this post could answer."
     }
   ]
 }

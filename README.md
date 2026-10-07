@@ -17,12 +17,16 @@ see it.
 
 **Nothing gets posted until you say yes.** These skills write. You post.
 
+**Russian works too.** The Python tools read Cyrillic: hashtags, calls to
+action, hook words, speaking rate, hook formulas and a Russian slop block in
+the lexicon. See [Russian](#russian).
+
 ## Install
 
 Paste this into Claude:
 
 ```
-https://github.com/Jakeschincariol/instagram-agent-skill
+https://github.com/justcallmejesi/instagram-agent-skill
 
 Install this skill, then confirm /ig-reel works.
 ```
@@ -30,15 +34,15 @@ Install this skill, then confirm /ig-reel works.
 Or do it yourself, in Claude Code:
 
 ```bash
-git clone https://github.com/Jakeschincariol/instagram-agent-skill.git
+git clone https://github.com/justcallmejesi/instagram-agent-skill.git
 cp -r instagram-agent-skill/skills/ig-* ~/.claude/skills/
 ```
 
 Or as a plugin:
 
 ```
-/plugin marketplace add Jakeschincariol/instagram-agent-skill
-/plugin install instagram-agent
+/plugin marketplace add justcallmejesi/instagram-agent-skill
+/plugin install instagram-agent@instagram-agent-skill
 ```
 
 Project-local instead of global: copy the same folders into your repo's
@@ -166,7 +170,9 @@ python3 detect.py before.txt after.txt       # prove the delta
   survive copy-paste and they are invisible in every editor you own.
 - **Typography.** Em dash to comma, en dash to hyphen, curly quotes to
   straight, ellipsis to three dots, and the orphaned punctuation that leaves.
-- **The lexicon.** 154 stock words and phrases with plain-English replacements.
+  In Russian the dash is grammar, so there it becomes a typed " - " instead.
+- **The lexicon.** 207 stock words and phrases with plain replacements, 154
+  English and 53 Russian.
   The last block of it is Instagram-specific: "stop scrolling", "in today's
   video", "follow for more", "tag someone who needs this", "the algorithm
   loves", "run don't walk". It lives in
@@ -195,6 +201,24 @@ After `humanize.py`, with the flagged structures still unrewritten:
 ```
   HUMAN SCORE   ###################.....  79.7   PASS    (+47.2)
 ```
+
+### Russian
+
+Every tool works on Russian text.
+
+- `caption.py` counts Cyrillic hashtags against the cap of five, knows the
+  Russian asks ("сохрани", "напиши в комментариях", "ссылка в шапке") and
+  the generic Russian tags (#рекомендации, #хочуврек).
+- `hookscore.py` and `beats.py` count Cyrillic words, time a Russian script at
+  140 wpm instead of 165, and know Russian stakes, numbers, greetings,
+  preambles and "you" (including the one inside "теряешь").
+- `humanize.py` and `detect.py` carry a Russian slop block: "в современном
+  мире", "важно отметить, что", "давайте разберёмся", "погрузиться в". Only
+  fixed phrases are rewritten, because a replacement has to survive every case
+  form. Inflected tells ("является", "уникальный", "не просто X, а Y") are
+  flagged for a rewrite instead. The VOICE check skips contractions, which
+  Russian does not have.
+- `swipe.py` names the formula of a Russian hook too, for all 26 formulas.
 
 ### The swipe file
 
@@ -318,17 +342,20 @@ skills/ig-reel/hooks.json          26 hook formulas: template, example, on-scree
 skills/ig-reel/hookscore.py        the five-property hook panel
 skills/ig-reel/beats.py            script to timed beat sheet
 skills/ig-caption/caption.py       the truncation preview and the caption linter
-skills/ig-human/slop.json          the lexicon: 154 terms, 18 invisible classes, 16 tells
+skills/ig-human/slop.json          the lexicon: 207 terms, 18 invisible classes, 24 tells
 skills/ig-human/humanize.py        the three cleaning passes
 skills/ig-human/detect.py          the five-check panel
 skills/ig-viral/swipe.py           outlier ranking and formula classification
 skills/ig-profile/rubric.json      the 100-point profile score
 templates/voice.md                 your voice profile. Fill this in first.
+tests/test_scripts.py              python3 -m unittest discover tests
 ```
 
 ## Credit
 
-Made by Jake Schincariol, [opusjake.ai](https://opusjake.ai).
+Made by Jake Schincariol, [opusjake.ai](https://opusjake.ai). This fork
+adds Russian support and a handful of fixes on top of
+[the original](https://github.com/Jakeschincariol/instagram-agent-skill).
 
 Sibling repo, same idea for a different platform:
 [linkedin-agent-skill](https://github.com/Jakeschincariol/linkedin-agent-skill).

@@ -20,10 +20,13 @@ python3 detect.py draft.txt                    # score it, five checks
 python3 detect.py before.txt after.txt         # prove the delta
 ```
 
-Both read `slop.json`: 154 stock words and phrases with plain-English
-replacements, 18 invisible character classes, 11 typographic substitutions and
-16 structural tells. The last block of each list is Instagram-specific, the
-vocabulary that only shows up in captions and voiceovers. It is meant to be
+Both read `slop.json`: 207 stock words and phrases with plain replacements
+(154 English, 53 Russian), 18 invisible character classes, 11 typographic
+substitutions and 24 structural tells. The last English block of each list is
+Instagram-specific, the vocabulary that only shows up in captions and
+voiceovers. The Russian block rewrites fixed phrases only; inflected tells like
+"является" and "уникальный" are flagged instead, because no single replacement
+survives every case form. It is meant to be
 edited. If the user has a word they always use that the lexicon strips, take it
 out of the file.
 
@@ -48,7 +51,9 @@ any remaining Unicode format character it does not have a name for.
 **2. Typography.** Em dash to comma, en dash to hyphen, curly quotes to
 straight, ellipsis to three dots, bullet character to hyphen. The em dash pass
 is the one that matters: it collapses the dash to a comma and then cleans up
-the double punctuation and orphaned periods that leaves behind.
+the double punctuation and orphaned periods that leaves behind. In Russian the
+dash is grammar ("Жизнь — это ..."), so there it becomes a typed " - "
+instead. A dash that opens a line is a bullet and becomes "- ".
 
 **3. The slop lexicon.** delve, leverage, robust, seamless, crucial, testament
 to, "in today's fast-paced world", plus the Instagram block: "stop scrolling",
@@ -84,7 +89,7 @@ PASS, and it is the part a script cannot do.
 | SPECIFICITY | numbers, names, concrete markers per 100 words | abstract nouns, no figures |
 | SLOP DENSITY | lexicon hits per 100 words | stock vocabulary |
 | FINGERPRINT | invisible chars, em dashes, curly quotes per 1k chars | typographically perfect |
-| VOICE | contractions, person, structural tells | no contractions, staged reveals |
+| VOICE | contractions (not in Russian), person, structural tells | no contractions, staged reveals |
 
 The verdict weights the mean at 60% and the **weakest single check** at 40%,
 because one signal is enough. PASS needs an overall of 70+ with no check

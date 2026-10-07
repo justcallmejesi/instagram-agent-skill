@@ -11,7 +11,8 @@ said you were making.
 The timings are an estimate from word count at a words-per-minute rate. They
 are close enough to plan an edit and not a substitute for recording it. Set
 your own rate with --wpm once you have timed yourself reading a script out
-loud: most people land between 150 and 200, and the default here is 165.
+loud: most people land between 150 and 200, and the default here is 165
+(140 for a Russian script, whose words run longer).
 
 Usage
   python3 beats.py script.txt
@@ -26,20 +27,29 @@ import json
 import re
 import sys
 
-WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
+WORD_RE = re.compile(r"[\w$%'’-]+")
 SENT_RE = re.compile(r"[^.!?]+[.!?]*")
-CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
+CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-ZА-ЯЁ][a-zа-яё]{2,}\b", re.MULTILINE)
 STOPWORDS = {
     "the", "a", "an", "and", "or", "but", "if", "of", "to", "in", "on", "for",
     "with", "that", "this", "it", "is", "are", "was", "were", "be", "been",
     "you", "your", "i", "my", "me", "we", "our", "they", "them", "he", "she",
     "so", "just", "not", "no", "do", "did", "does", "have", "has", "had",
     "will", "can", "at", "as", "by", "from", "out", "up", "off", "one", "all",
+    "и", "в", "во", "не", "на", "я", "что", "с", "со", "как", "а", "то", "все",
+    "всё", "так", "но", "да", "ты", "к", "у", "же", "вы", "за", "бы", "по", "от",
+    "о", "об", "из", "ну", "ли", "если", "уже", "или", "ни", "до", "это", "этот",
+    "мы", "мне", "меня", "мой", "моя", "твой", "для", "про", "без", "есть", "был",
+    "была", "были", "он", "она", "они", "его", "её", "их", "там", "тут", "вот",
 }
 
 HOOK_WINDOW = 3.0        # seconds. Past this, the thumb has already decided.
 MAX_BEAT = 4.0           # seconds on one idea with no change on screen.
 ABSTRACT_RUN = 3         # beats in a row with nothing checkable in them.
+
+
+def is_ru(text):
+    return len(re.findall(r"[а-яё]", text, re.I)) > len(re.findall(r"[a-z]", text, re.I))
 
 
 def words(text):
@@ -194,13 +204,14 @@ def render(a, out=sys.stdout):
 def main():
     ap = argparse.ArgumentParser(description="Time a Reel script into a beat sheet.")
     ap.add_argument("input", nargs="?", default="-", help="script file, or - for stdin")
-    ap.add_argument("--wpm", type=float, default=165, help="speaking rate (default 165)")
+    ap.add_argument("--wpm", type=float, help="speaking rate (default 165, Russian 140)")
     ap.add_argument("--target", type=float, help="target length in seconds")
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
     raw = sys.stdin.read() if args.input == "-" else open(args.input, encoding="utf-8").read()
-    a = analyse(raw, wpm=args.wpm, target=args.target)
+    wpm = args.wpm or (140 if is_ru(raw) else 165)
+    a = analyse(raw, wpm=wpm, target=args.target)
     if not a:
         print("empty script", file=sys.stderr)
         sys.exit(2)

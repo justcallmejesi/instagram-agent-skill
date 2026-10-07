@@ -10,7 +10,10 @@ Three passes, in this order:
                  These survive copy-paste and are the most mechanical tell in
                  any generated text.
   2. TYPOGRAPHIC em dash -> comma, en dash -> hyphen, curly quotes -> straight,
-                 ellipsis -> three dots, bullet -> hyphen.
+                 ellipsis -> three dots, bullet -> hyphen. In Russian the
+                 dash is grammar ("Жизнь — это ..."), so there it becomes a
+                 typed " - " instead of a comma. A dash that opens a line is a
+                 bullet or a dialogue line and becomes "- " in both.
   3. LEXICAL     replace the slop lexicon in slop.json with plain words,
                  preserving capitalisation and leaving URLs untouched.
 
@@ -38,6 +41,10 @@ LEX = os.path.join(HERE, "slop.json")
 
 URL_RE = re.compile(r"https?://\S+|www\.\S+|\S+@\S+\.\S+")
 SENT_RE = re.compile(r"[^.!?\n]+[.!?]*")
+
+
+def is_ru(text):
+    return len(re.findall(r"[а-яё]", text, re.I)) > len(re.findall(r"[a-z]", text, re.I))
 
 
 def load_lexicon(path=LEX):
@@ -95,18 +102,23 @@ def pass_invisible(text, lex):
 
 def pass_typographic(text, lex):
     hits = []
+    dash = " - " if is_ru(text) else ", "
     for entry in lex["typographic"]:
         ch = entry["from"]
         n = text.count(ch)
         if not n:
             continue
-        hits.append({"name": f"{ch} {entry['name']}", "count": n, "to": entry["to"].strip() or "(space)"})
+        to = dash if ch == "—" else entry["to"]
+        hits.append({"name": f"{ch} {entry['name']}", "count": n, "to": to.strip() or "(space)"})
+        if ch in "—–":
+            # Opening a line it is a bullet or a dialogue line, not a pause.
+            text = re.sub(r"(?m)^([ \t]*)" + ch + r"[ \t]*", r"\1- ", text)
         if ch == "—":
-            # " word — word " and "word—word" both collapse to a comma + space.
-            text = re.sub(r"\s*—\s*", ", ", text)
+            # " word — word " and "word—word" both become ", " (Russian: " - ").
+            text = re.sub(r"[ \t]*—[ \t]*", dash, text)
         elif ch == "–":
-            text = re.sub(r"\s*–\s*(?=\d)", "-", text)      # 5–10  -> 5-10
-            text = re.sub(r"\s+–\s+", ", ", text)            # used as em dash
+            text = re.sub(r"[ \t]*–[ \t]*(?=\d)", "-", text)    # 5–10  -> 5-10
+            text = re.sub(r"[ \t]+–[ \t]+", dash, text)          # used as em dash
             text = text.replace("–", "-")
         else:
             text = text.replace(ch, entry["to"])
@@ -133,7 +145,8 @@ def pass_lexical(text, lex):
                      key=lambda e: len(e["find"]), reverse=True)
     for entry in entries:
         find = entry["find"]
-        pattern = re.compile(r"\b" + re.escape(find).replace(r"\ ", r"\s+") + r"\b",
+        # Lookarounds, not \b: "what are your thoughts?" ends on punctuation.
+        pattern = re.compile(r"(?<!\w)" + re.escape(find).replace(r"\ ", r"\s+") + r"(?!\w)",
                              re.IGNORECASE)
         found = pattern.findall(text)
         if not found:
@@ -145,13 +158,15 @@ def pass_lexical(text, lex):
     # punctuation behind ("system. ." or a line that now opens on a comma),
     # and that reads worse than the slop did.
     text = re.sub(r"[ \t]{2,}", " ", text)
-    text = re.sub(r"(?m)^[ \t]*(?:[,.;:]+[ \t]*)+", "", text)
+    text = text.replace("...", "\x00ELL\x00")          # protect real ellipses, including
+                                                      # the one a mid-sentence hook opens on
+    text = re.sub(r"(?m)^[ \t]*(?:[,.;:!?]+[ \t]*)+", "", text)
     text = re.sub(r"(?m)^[ \t](?=\S)", "", text)       # one space left by a deletion.
                                                       # Deeper indents are deliberate.
-    text = re.sub(r"\s+([,.;:!?])", r"\1", text)
+    text = re.sub(r"[ \t]+([,.;:!?])", r"\1", text)    # not \s: never pull a line up
     text = re.sub(r",\s*([,.;:!?])", r"\1", text)      # an em dash became a comma,
                                                       # then the clause after it went
-    text = text.replace("...", "\x00ELL\x00")          # protect real ellipses
+    text = re.sub(r"([.!?])[,;:]+", r"\1", text)       # "It works. Here's the thing, ..."
     text = re.sub(r"\.\s*\.+", ".", text)
     text = re.sub(r"([!?])\s*\.", r"\1", text)
     text = text.replace("\x00ELL\x00", "...")
@@ -196,10 +211,10 @@ def restore_capitals(original, text):
     a deliberately lower-case voice is a style, not an artefact, and shouting
     over it would be exactly the kind of thing this script exists to stop.
     """
-    starts = re.findall(r"(?:^|[.!?]\s+|\n)\s*([A-Za-z])", original)
+    starts = re.findall(r"(?:^|[.!?]\s+|\n)\s*([^\W\d_])", original)
     if not starts or sum(1 for c in starts if c.isupper()) * 2 < len(starts):
         return text
-    return re.sub(r"(?:^|(?<=[.!?] )|(?<=[.!?]\n)|(?<=\n))\s*([a-z])",
+    return re.sub(r"(?:^|(?<=[.!?] )|(?<=[.!?]\n)|(?<=\n))\s*([a-zа-яё])",
                   lambda m: m.group(0)[:-1] + m.group(1).upper(), text)
 
 

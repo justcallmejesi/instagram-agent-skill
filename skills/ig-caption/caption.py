@@ -35,27 +35,38 @@ HASHTAG_LIMIT = 5        # Instagram's cap per post or reel since 18 Dec 2025,
                          # rather than many generic ones, can improve both your
                          # content's performance and people's experience".
 
-HASHTAG_RE = re.compile(r"(?:^|\s)(#[A-Za-z0-9_]+)")
+HASHTAG_RE = re.compile(r"(?:^|\s)(#\w+)")    # \w: #маркетинг and #café are tags too
 MENTION_RE = re.compile(r"(?:^|\s)(@[A-Za-z0-9_.]+)")
 LINK_RE = re.compile(r"https?://\S+|\bwww\.\S+|\b[a-z0-9-]+\.(?:com|co|io|net|org|ai|app)/\S*",
                      re.IGNORECASE)
-EMOJI_RE = re.compile(r"[\U0001F300-\U0001FAFF☀-➿←-⇿️]")
-CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
+# Not U+FE0F: a heart and its variation selector are one emoji, not two.
+EMOJI_RE = re.compile(r"[\U0001F300-\U0001FAFF☀-➿←-⇿]")
+CONCRETE_RE = re.compile(r"\$\s?\d|\b\d[\d,.]*\b|(?<!^)\b[A-ZА-ЯЁ][a-zа-яё]{2,}\b", re.MULTILINE)
 
+# Each ask is one pattern, English and Russian together, so a bilingual
+# caption still counts one "save this" as one ask.
 ASKS = [
-    (re.compile(r"(?i)\bcomment (?:the word |\")?[A-Z0-9]{2,}\b"), "comment a keyword"),
-    (re.compile(r"(?i)\b(?:dm|message) me\b"), "DM me"),
-    (re.compile(r"(?i)\bsave (?:this|it)\b"), "save this"),
-    (re.compile(r"(?i)\bshare (?:this|it)\b"), "share this"),
-    (re.compile(r"(?i)\bfollow (?:me|for)\b"), "follow"),
-    (re.compile(r"(?i)\blink in (?:my )?bio\b"), "link in bio"),
-    (re.compile(r"(?i)\b(?:swipe|tap) (?:through|left|right|for|to)\b"), "swipe or tap"),
-    (re.compile(r"(?i)\btell me\b|\bwhat would you\b|\bwhich one\b"), "answer a question"),
+    (re.compile(r"(?i)\bcomment (?:the word |\")?[A-Z0-9]{2,}\b"
+                r"|\b(?:напиши|пиши|оставь|ставь)(?:те)?\b[^.!?\n]{0,30}\bкоммент"), "comment a keyword"),
+    (re.compile(r"(?i)\b(?:dm|message) me\b"
+                r"|\b(?:напиши|пиши)(?:те)? мне\b|\bв (?:директ|личк[уеи]|лс)\b"), "DM me"),
+    (re.compile(r"(?i)\bsave (?:this|it)\b|\bсохран(?:и|ите|яй|яйте)\b"), "save this"),
+    (re.compile(r"(?i)\bshare (?:this|it)\b|\bподел(?:ись|итесь)\b"
+                r"|\b(?:отправь|отправьте|перешли|перешлите) (?:другу|подруге|тому|тем|это|этот)\b"), "share this"),
+    (re.compile(r"(?i)\bfollow (?:me|for)\b|\bподпиш(?:ись|итесь)\b|\bподписывай(?:ся|тесь)\b"), "follow"),
+    (re.compile(r"(?i)\blink in (?:my )?bio\b|\bссылк[аиу]? в (?:шапке|профиле|био)\b"), "link in bio"),
+    (re.compile(r"(?i)\b(?:swipe|tap) (?:through|left|right|for|to)\b|\bлистай(?:те)?\b|\bсвайп"), "swipe or tap"),
+    (re.compile(r"(?i)\btell me\b|\bwhat would you\b|\bwhich one\b"
+                r"|\bа (?:ты|вы) как\b|\bкак (?:думаешь|думаете|считаешь|считаете)\b"
+                r"|\bрасскаж(?:и|ите)\b|\bкакой вариант\b"), "answer a question"),
 ]
 
 FILLER_TAGS = {"#viral", "#fyp", "#explore", "#explorepage", "#foryou", "#foryoupage",
                "#trending", "#instagood", "#love", "#follow", "#like4like", "#reels",
-               "#reelsinstagram", "#viralreels", "#instadaily"}
+               "#reelsinstagram", "#viralreels", "#instadaily",
+               "#рекомендации", "#рек", "#реки", "#врек", "#вреки", "#хочуврек",
+               "#хочувреки", "#хочувтоп", "#популярное", "#тренды", "#рилс", "#рилсы",
+               "#интересное", "#лайк", "#лайки", "#взаимныелайки", "#взаимнаяподписка"}
 
 
 def visible_window(text, cut):

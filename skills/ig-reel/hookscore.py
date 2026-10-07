@@ -36,14 +36,16 @@ import re
 import statistics
 import sys
 
-WORD_RE = re.compile(r"[A-Za-z0-9$%'’-]+")
+WORD_RE = re.compile(r"[\w$%'’-]+")
 NUMBER_RE = re.compile(
     r"\$\s?\d[\d,]*(?:\.\d+)?"                       # money, whole
     r"|\b\d[\d,]*(?:\.\d+)?\s?"                      # a figure, with or
     r"(?:%|k\b|x\b|hrs?\b|hours?\b|mins?\b|minutes?\b"  # without a unit
     r"|days?\b|weeks?\b|months?\b|years?\b)?",
     re.IGNORECASE)
-PROPER_RE = re.compile(r"(?<!^)\b[A-Z][a-z]{2,}\b")
+PROPER_RE = re.compile(r"(?<!^)\b[A-ZА-ЯЁ][a-zа-яё]{2,}\b")
+PROPER_TOKEN = re.compile(r"[A-ZА-ЯЁ][a-zа-яё]{2,}\b")  # PROPER_RE never matches at
+                                                        # position 0, so not on a token
 HASHTAG_RE = re.compile(r"(?:^|\s)#\w+")
 EMOJI_RE = re.compile(r"[\U0001F300-\U0001FAFF☀-➿]")
 
@@ -57,9 +59,23 @@ SPOKEN_NUMBERS = {
     "sixty", "seventy", "eighty", "ninety", "hundred", "thousand", "million",
     "billion", "dozen", "half", "twice", "triple",
 }
+SPOKEN_NUMBERS |= {   # Russian, the common case forms
+    "ноль", "нуля", "два", "две", "двух", "три", "трёх", "трех", "четыре", "пять",
+    "пяти", "шесть", "семь", "восемь", "девять", "десять", "десяти", "двадцать",
+    "тридцать", "сорок", "пятьдесят", "сто", "двести", "триста", "пятьсот",
+    "тысяча", "тысячи", "тысяч", "тысячу", "миллион", "миллиона", "миллионов",
+    "миллиард", "миллиарда", "миллиардов", "полтора", "половина", "половину",
+    "дважды", "вдвое", "втрое",
+}
 MONEY_WORDS = {
     "dollars", "dollar", "bucks", "grand", "percent", "cents",
     "millionaire", "billionaire", "revenue", "profit", "salary", "rent",
+}
+MONEY_WORDS |= {
+    "рубль", "рубля", "рублей", "руб", "доллар", "доллара", "долларов", "баксов",
+    "евро", "процент", "процента", "процентов", "зарплата", "зарплату", "зарплаты",
+    "выручка", "выручку", "выручки", "прибыль", "прибыли", "аренда", "аренду",
+    "тыс", "млн", "млрд", "косарь", "косаря", "косарей",
 }
 
 # Words that put something on the line. A hook with none of these is a
@@ -77,6 +93,25 @@ STAKES = {
     "risk", "danger", "warning", "regret", "wish", "should", "shouldn't",
     "still", "already", "only", "without", "versus", "vs", "actually",
 }
+STAKES |= {
+    "не", "нет", "ни", "никто", "никого", "никому", "ничего", "никогда", "нельзя",
+    "но", "без", "только", "уже", "ещё", "еще", "вместо", "пока", "стоп", "хватит",
+    "зря", "против", "хуже", "кроме", "долг", "долги", "долгов",
+}
+# Russian inflects, so "потерял", "потеряла" and "потеряли" all start the same.
+# Stems only where the prefix cannot also start an innocent word.
+STAKE_STEMS = (
+    "потер", "теря", "ошиб", "провал", "уволи", "бесплат", "секрет", "правд",
+    "обман", "вран", "врал", "запрет", "худш", "ненави", "риск", "опасн", "сожале",
+    "проблем", "слил", "украл", "штраф", "банкрот", "кинул", "стоил", "заплат",
+    "переплат", "бросил", "удали", "убил", "убива", "замени", "предупрежд",
+    "первы", "впервые", "скрыва", "скрыт",
+)
+
+
+def stake(token):
+    return token in STAKES or token.startswith(STAKE_STEMS)
+
 
 # Openers that spend the first second saying nothing.
 WEAK_OPENERS = [
@@ -86,6 +121,11 @@ WEAK_OPENERS = [
     "have you", "did you", "do you", "are you", "in this", "in today",
     "the thing", "a lot", "there is", "there are", "this is", "it is",
     "as a", "when it", "if you've", "you know",
+    "привет", "всем привет", "здравствуйте", "добрый день", "итак", "короче", "ну",
+    "так вот", "слушайте", "слушай", "сегодня", "в этом", "в сегодняшнем",
+    "давайте", "давай", "я хочу", "хочу", "вы знали", "ты знал", "ты знала",
+    "знаешь", "знаете", "вы когда-нибудь", "ты когда-нибудь", "один из", "одна из",
+    "одно из", "многие", "есть", "если честно", "честно",
 ]
 
 # Imperatives that earn the front position.
@@ -93,14 +133,34 @@ IMPERATIVES = {
     "stop", "steal", "copy", "delete", "try", "watch", "read", "save",
     "use", "build", "make", "write", "send", "take", "start", "quit",
     "never", "always", "don't", "dont", "do", "put", "run", "check",
+    "стоп", "хватит", "перестань", "перестаньте", "прекрати", "прекратите",
+    "сохрани", "сохраните", "укради", "скопируй", "скопируйте", "удали", "удалите",
+    "попробуй", "попробуйте", "смотри", "смотрите", "посмотри", "посмотрите",
+    "читай", "прочитай", "используй", "используйте", "сделай", "сделайте", "пиши",
+    "напиши", "напишите", "отправь", "отправьте", "возьми", "возьмите", "начни",
+    "начните", "брось", "бросьте", "никогда", "всегда", "не", "делай", "делайте",
+    "проверь", "проверьте", "запомни", "запомните", "забудь", "забудьте",
 }
 
+YOU_RE = re.compile(
+    r"\b(?:you|your|you're|youre|yourself"
+    r"|ты|тебя|тебе|тобой|твой|твоя|твоё|твое|твои|твоего|твоей|твоих|твоим"
+    r"|вы|вас|вам|вами|ваш|ваша|ваше|ваши|вашего|вашей|ваших|вашим)\b"
+    r"|\b\w{2,}(?:ешь|ёшь|ишь)(?:ся)?\b")       # "теряешь": Russian says "you" in the verb
+ME_RE = re.compile(
+    r"\b(?:i|my|me|we|our"
+    r"|я|мне|меня|мной|мой|моя|моё|мое|мои|моего|моей|моих"
+    r"|мы|нас|нам|нами|наш|наша|наше|наши|нашего|нашей|наших)\b")
+
 DEALBREAKERS = [
-    (re.compile(r"(?i)^\s*(?:stop scrolling|don'?t scroll)"),
+    (re.compile(r"(?i)^\s*(?:stop scrolling|don'?t scroll|(?:стоп,?\s*)?не (?:листай|пролистывай))"),
      "Opens with \"stop scrolling\". Asking for attention proves you have not earned it."),
-    (re.compile(r"(?i)\b(?:in (?:this|today'?s) (?:video|reel)|i'?m going to show you|i'?ll show you how)\b"),
+    (re.compile(r"(?i)\b(?:in (?:this|today'?s) (?:video|reel)|i'?m going to show you|i'?ll show you how"
+                r"|в (?:этом|сегодняшнем) (?:видео|ролике|рилсе)|сегодня (?:я )?(?:расскажу|покажу)"
+                r"|я (?:вам |тебе )?(?:расскажу|покажу),? как)\b"),
      "Video preamble. Delete it and open on the payoff."),
-    (re.compile(r"(?i)^\s*(?:hey |hi |what'?s up |welcome )"),
+    (re.compile(r"(?i)^\s*(?:hey |hi |what'?s up |welcome "
+                r"|(?:всем )?привет\b|здравствуйте\b|добрый (?:день|вечер)\b)"),
      "Greeting. Nobody came to the feed to be greeted."),
     (HASHTAG_RE,
      "Hashtag in the hook. Hashtags belong at the bottom of the caption, if anywhere."),
@@ -118,11 +178,15 @@ def words(text):
     return WORD_RE.findall(re.sub(r"(?<=\d),(?=\d)", "", text))
 
 
+def is_ru(text):
+    return len(re.findall(r"[а-яё]", text, re.I)) > len(re.findall(r"[a-z]", text, re.I))
+
+
 def check_length(text):
     """A hook has to land before the thumb moves. Roughly two seconds."""
     w = words(text)
     n = len(w)
-    secs = n / 2.75                      # ~165 words per minute, spoken
+    secs = n / (2.33 if is_ru(text) else 2.75)   # ~140 wpm spoken Russian, ~165 English
     chars = len(text.strip())
     if 5 <= n <= 12:
         score = 100.0
@@ -137,7 +201,9 @@ def check_length(text):
 
 def check_specificity(text):
     """One concrete thing beats three abstract ones."""
-    nums = [n.strip() for n in NUMBER_RE.findall(text) if n.strip()]
+    # "180 000" is one figure, written the Russian way.
+    joined = re.sub(r"(?<=\d)[ \u00a0\u202f](?=\d{3}\b)", "", text)
+    nums = [n.strip() for n in NUMBER_RE.findall(joined) if n.strip()]
     propers = set(PROPER_RE.findall(text))
     low = [w.lower().strip("'’") for w in words(text)]
     spoken = [w for w in low if w in SPOKEN_NUMBERS or w in MONEY_WORDS]
@@ -151,7 +217,7 @@ def check_specificity(text):
 def check_stakes(text):
     """Tension, cost, negation. Something the viewer might lose."""
     w = [x.lower().strip("'’") for x in words(text)]
-    hits = [x for x in w if x in STAKES]
+    hits = [x for x in w if stake(x)]
     markers = sorted(set(hits))
     if re.search(r"\$\s?\d", text):
         markers.append("a price")
@@ -172,13 +238,14 @@ def check_frontload(text):
     penalty = 0
     hit_opener = None
     for weak in WEAK_OPENERS:
-        if opener.startswith(weak) or low[0] == weak:
+        # Whole words only: "yo" must not catch "your", nor "so" catch "some".
+        if re.match(re.escape(weak) + r"(?!\w)", opener):
             penalty, hit_opener = 30, weak
             break
     payload = None
     for i, token in enumerate(low):
-        if (token in STAKES or token in SPOKEN_NUMBERS or token in MONEY_WORDS
-                or NUMBER_RE.match(w[i]) or (i and PROPER_RE.match(w[i]))):
+        if (stake(token) or token in SPOKEN_NUMBERS or token in MONEY_WORDS
+                or NUMBER_RE.match(w[i]) or (i and PROPER_TOKEN.match(w[i]))):
             payload = i
             break
     if payload is None:
@@ -201,11 +268,11 @@ def check_address(text):
     """Aimed at one viewer, or floating in the air."""
     low = text.lower()
     w = [x.lower().strip("'’") for x in words(text)]
-    if re.search(r"\b(you|your|you're|youre|yourself)\b", low):
+    if YOU_RE.search(low):
         return 100.0, "speaks to the viewer"
     if w and w[0] in IMPERATIVES:
         return 90.0, f"imperative opener (\"{w[0]}\")"
-    if re.search(r"\b(i|my|me|we|our)\b", low):
+    if ME_RE.search(low):
         return 70.0, "first person, no viewer named"
     return 35.0, "third person, nobody in the room"
 

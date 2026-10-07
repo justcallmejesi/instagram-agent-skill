@@ -33,11 +33,16 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 LEX = os.path.join(HERE, "slop.json")
 
 SENT_RE = re.compile(r"[^.!?\n]+[.!?]*")
-WORD_RE = re.compile(r"[A-Za-z']+")
+WORD_RE = re.compile(r"(?:[^\W\d_]|')+")          # letters in any alphabet
 CONTRACTIONS = re.compile(r"\b\w+'(?:s|t|re|ve|ll|d|m)\b", re.IGNORECASE)
-PRONOUNS = re.compile(r"\b(i|me|my|mine|we|us|our|you|your)\b", re.IGNORECASE)
+PRONOUNS = re.compile(
+    r"\b(i|me|my|mine|we|us|our|you|your"
+    r"|я|меня|мне|мной|мой|моя|моё|мое|мои|моего|моей|моих|мы|нас|нам|нами|наш|наша|наше|наши"
+    r"|ты|тебя|тебе|тобой|твой|твоя|твоё|твое|твои|вы|вас|вам|вами|ваш|ваша|ваше|ваши"
+    r"|\w{2,}(?:ешь|ёшь|ишь)(?:ся)?)\b",              # "теряешь" carries its own "you"
+    re.IGNORECASE)
 NUMBERS = re.compile(r"\b\d[\d,.]*%?\b|\$\d")
-PROPER = re.compile(r"(?<![.!?]\s)(?<!^)\b[A-Z][a-z]{2,}\b", re.MULTILINE)
+PROPER = re.compile(r"(?<![.!?]\s)(?<!^)\b[A-ZА-ЯЁ][a-zа-яё]{2,}\b", re.MULTILINE)
 
 
 def clamp(n):
@@ -57,6 +62,10 @@ def sentences(text):
 
 def words(text):
     return WORD_RE.findall(text)
+
+
+def is_ru(text):
+    return len(re.findall(r"[а-яё]", text, re.I)) > len(re.findall(r"[a-z]", text, re.I))
 
 
 def check_burstiness(text):
@@ -89,8 +98,9 @@ def check_slop(text, lex):
         return 50.0, "empty"
     hits, found = 0, []
     for entry in lex["words"] + lex["phrases"]:
-        pattern = re.compile(r"\b" + re.escape(entry["find"]).replace(r"\ ", r"\s+") + r"\b",
-                             re.IGNORECASE)
+        # Lookarounds, not \b: "what are your thoughts?" ends on punctuation.
+        pattern = re.compile(r"(?<!\w)" + re.escape(entry["find"]).replace(r"\ ", r"\s+")
+                             + r"(?!\w)", re.IGNORECASE)
         n = len(pattern.findall(text))
         if n:
             hits += n
@@ -138,14 +148,18 @@ def check_voice(text, lex):
             names.append(s["id"])
     bullets = [len(b.split()) for b in re.findall(r"(?m)^\s*[-*•]\s+(.+)$", text)]
     uniform = (len(bullets) >= 3 and statistics.pstdev(bullets) < 1.6)
-    score = (scale(contractions, human=3.0, machine=0.0) * 0.35
-             + scale(person, human=8.0, machine=1.0) * 0.35
-             + clamp(100 - tells * 22) * 0.30)
+    parts = [(scale(contractions, human=3.0, machine=0.0), 0.35),
+             (scale(person, human=8.0, machine=1.0), 0.35),
+             (clamp(100 - tells * 22), 0.30)]
+    ru = is_ru(text)
+    if ru:
+        parts = parts[1:]                    # Russian has no contractions to count
+    score = sum(s * wt for s, wt in parts) / sum(wt for _, wt in parts)
     if uniform:
         score -= 12
         names.append("uniform-bullets")
-    detail = (f"{contractions:.1f} contractions, {person:.1f} personal pronouns "
-              f"per 100 words, {tells} structural tell(s)")
+    detail = ("" if ru else f"{contractions:.1f} contractions, ") + (
+        f"{person:.1f} personal pronouns per 100 words, {tells} structural tell(s)")
     if names:
         detail += " [" + ", ".join(names[:4]) + "]"
     return clamp(score), detail
@@ -216,7 +230,7 @@ def main():
         })
 
     if args.json:
-        print(json.dumps(payload if args.compare else payload[0], indent=2))
+        print(json.dumps(payload if args.compare else payload[0], indent=2, ensure_ascii=False))
         return
 
     for (name, text), p in zip(targets, payload):
